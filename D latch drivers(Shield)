@@ -1,0 +1,13 @@
+library ieee; 
+use ieee.std_logic_1164.all;
+
+entity Dl is 
+   port(d:in bit; q,qbar:buffer bit); 
+end Dl; 
+ 
+architecture virat of Dl is 
+   signal s1,r1:bit; 
+begin 
+   q<= d nand qbar; 
+   qbar<= d nand q; 
+end virat; 
