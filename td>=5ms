@@ -1,0 +1,21 @@
+/define register variables
+reg a, b, c;
+//intra assignment delays
+initial
+begin
+a = 0; c = 0;
+b = #5 a + c; //Take value of a and c at the time=0, evaluate
+//a + c and then wait 5 time units to assign value
+//to b.
+end 
+
+//Equivalent method with temporary variables and regular delay control
+initial
+begin
+a = 0; c = 0;
+temp_ac = a + c;
+#5 b = temp_ac; //Take value of a + c at the current time and
+//store it in a temporary variable. Even though a and c
+//might change between 0 and 5,
+//the value assigned to b at time 5 is unaffected.
+end
