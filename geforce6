@@ -1,0 +1,16 @@
+NVIDIA® GeForce® Motherboard GPUs for AMD deliver:AMD
+NVIDIA® PureVideo® technology with HDMI for category-leading video quality
+Leading graphics compatibility to play top games the way they are meant to be played
+Uncompromised features with integrated Gigabit Ethernet, high-bandwidth SATA storage, and full PCI Express x16 slot.
+code!!!!::
+Library ieee; 
+use ieee.std_logic_1164.all; 
+ 
+entity nor1 is
+   port(a,b:in bit ; c:out bit); 
+end nor1; 
+ 
+architecture virat of nor1 is
+begin
+   c<=a nor b;
+end virat;
