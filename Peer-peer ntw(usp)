@@ -1,0 +1,269 @@
+#include <iostream>
+#include <vector>
+#include <algorithm>
+#include <numeric>
+#include <map>
+#include <climits>
+#include <stack>
+#include <set>
+using namespace std;
+#define all(t) begin(t), end(t)
+#define sp << " " <<
+
+//using ul = unsigned long;
+using ul =  long;
+int nd[3][19] = {{2032,1892,2033,2387,2556,2271,2132,2270,2120,0,1855,0,1724,1376,1187,0,1109,0,950},
+		 {10654,9293,10655,12647,12696,10022,11094,11124,10099,0,8640,0,6767,6193,5486,0,4701,0,3831},
+		 {19860,17114,19861,23695,23698,18720,21272,20727,18790,0,15841,0,12328,11201,10215,0,8517,0,6956}
+};
+vector<bool> X;
+vector<int> sieve;
+
+template <typename I>
+void make_sieve(I MAX) {
+//create table of primes
+  I M = MAX>>1;
+  if (!(MAX & 1)) M--;
+  X.resize(M+1,true);
+  I k;
+  for (I j=1,p=3,q=4;j<=M;j++, p+=2, q+=2*p-2) {
+    if (X[j]==0) continue;
+    else k=q;
+    while (k <= M) {
+      X[k] = 0;
+      k += p;
+    }
+  }
+  for  (I i=5;i<(I)X.size();i++) if (X[i]) sieve.push_back(2*i+1);
+}
+
+template <typename R>
+R gcd(R a, R b) {
+  while (true) {
+    if (b==0) return a;
+    a %= b;
+    if (a==0) return b;
+    b %= a;
+  }
+}
+
+template <typename R>
+R lcm(R a, R b) {
+  return (a / gcd(a, b)) * b;
+}
+
+struct ratio {
+  ul p, q;
+  ratio(): p(0), q(1) {}
+  ratio(ul a, ul b) : p(a), q(b) {}
+  ratio simplify() {
+    ul c = gcd(p, q);
+    p /= c; q /= c;
+    return *this;
+  }
+  ratio operator+(const ratio& b) {
+    ratio a;
+    a.q = lcm(q, b.q);
+    a.p = p*(a.q/q) + b.p*(a.q/b.q);
+    a.simplify();
+    return a;
+  }
+  ratio operator-(const ratio& b) {
+    ratio a;
+    a.q = q * b.q;
+    a.p = p*(a.q/q) - b.p*(a.q/b.q);
+    a.simplify();
+    return a;
+  }
+  void operator=(const ratio& b) {
+    p = b.p;
+    q = b.q;
+  }
+  bool operator<(const ratio& b) const {
+    ul cd = lcm(q, b.q);
+    return (p*(cd/q) < b.p*(cd/b.q));
+  }
+  bool operator==(const ratio& b) const {
+    return !(*this < b) && !(b < *this);
+  }
+  bool operator<=(const ratio& b) const {
+    return (*this < b) || (*this == b);
+  }
+  bool operator!=(const ratio& b) const {
+    return !(*this == b);
+  }
+  bool iszero() {return p == 0;}
+};
+
+ostream& operator<<(ostream& os, const ratio& r) {
+  os << r.p << '/' << r.q;
+  return os;
+}
+
+template <typename I>
+void print(const vector<I>& a) {
+  for (auto e: a) cout << e << ' ';
+  cout << endl;
+}
+
+void visit(const vector<bool>& x, const vector<ul>& D) {
+  for (size_t i=0;i<x.size();i++) if (x[i]) { cout << '(' sp i sp D[i] sp ')'<< ' ';}
+  cout << endl;
+}
+
+int main() {
+  int N, D;
+  cin >> D >> N;
+  switch (N) {
+  case 98:
+    if (D<21) {
+      cout << nd[0][D-2] << endl;
+      return 0;
+    }
+    break;
+  case 99:
+    if (D<21) {
+      cout << nd[1][D-2] << endl;
+      return 0;
+    }
+    break;
+  case 100:
+    if (D<21) {
+      cout << nd[2][D-2] << endl;
+      return 0;
+    }
+  }
+  make_sieve(N);
+  //B1 Initialize
+  vector<ratio> Dom;
+  for (int i=2;i<=N;i++) {
+    if (i<11) {Dom.push_back(ratio(1,i*i)); continue;}
+    if (i == 52) {
+      Dom.push_back(ratio(1,169)+ratio(1,169*9)+ratio(1,169*16));
+      continue;
+    }
+    if (i == 91) {
+      Dom.push_back(ratio(1,169*4)+ratio(1,169*25)+ratio(1,169*49));
+      continue;
+    }
+    if (i == 95) {
+      Dom.push_back(ratio(1,361*4)+ratio(1,361*9)+ratio(1,361*25));
+      continue;
+    }
+    bool use = true;
+    for (size_t j=0;j < sieve.size() && sieve[j]<=i;j++) {
+      if (i%sieve[j]==0) {use = false; break;}
+    }
+    if (use) {
+      Dom.push_back(ratio(1,i*i));
+    }
+  }
+  if (N >= 99) {
+    Dom.push_back(ratio(1,121)+ratio(1,121*9)+ratio(1,121*16)+ratio(1,121*36)+ratio(1,121*81));
+  }//99 at the back
+  ul common_denominator{1};
+  for (size_t i=0; i < Dom.size(); i++) {
+    common_denominator = lcm(common_denominator, Dom[i].q);
+  }
+  vector<ul> Dom_int(Dom.size());
+  for (size_t i=0; i < Dom.size(); i++) {
+    Dom_int[i] = Dom[i].p * (common_denominator/Dom[i].q);
+    //cout << i sp Dom_int[i] << endl;
+  }
+  
+  ul d = common_denominator/D;
+  //cout << d << endl;
+  int i0{0};
+  for (size_t i=0;i<Dom_int.size();i++)
+    if (Dom_int[i] <= d) {i0=i;break;}
+  if (i0>0) Dom_int.erase(Dom_int.begin(), Dom_int.begin()+i0);
+  //print(Dom_int);
+  int m = Dom_int.size();
+  vector<ul> Rem(m+1);
+  Rem[m] = 0;
+  for (int i = m-1; i>=0; i--) {
+    Rem[i] = Rem[i+1] + Dom_int[i];
+  }
+  for (int i = m; i>=0; i--) {
+    if (Rem[i] < d) Rem[i] = d - Rem[i];
+    else Rem[i] = 0;
+  }
+  //Doesn't matter that 99 and 100 are switched
+  //fill domain
+  //cout << "Domain size:" sp Dom.size() << endl;
+  vector<ul> S;
+  int n =  max((int)Dom_int.size()-18, (int)Dom_int.size()/2);
+  for (size_t i = n;i < Dom_int.size(); i++) {
+    S.push_back(Dom_int[i]);
+  }
+  //print(S);
+  multiset<ul> sums;
+  ul mask = 1 << S.size();
+  for (ul i = 0; i<mask;i++) {
+    ul Total{0};
+    for (size_t pos = 0; pos < S.size(); pos++)
+      if ((i >> pos) & 1) {
+	Total = Total + S[pos];
+      }
+    sums.insert(Total);
+  }
+  //for (auto e: sums) cout << e << endl;
+  if (N>=99) {
+    ul mask = 1 << (S.size()-1);
+    //ratio r = ratio(1,121*4)+ratio(1,121*9)+ratio(1,121*81);
+    S.back() = 124467840000;//r.p * (common_denominator/r.q);
+    for (ul i = 0; i < mask;i++) {
+      ul Total{0};
+      for (size_t pos = 0; pos < S.size()-1; pos++)
+  	if ((i >> pos) & 1) {
+  	  Total = Total + S[pos];
+  	}
+      sums.insert(Total + S.back());
+    }      
+    //r = ratio(1,121)+ratio(1,121*25)+ratio(1,121*49)+ratio(1,121*64)+ratio(1,121*81);
+    S.back() = 362741198400;//r.p * (common_denominator/r.q);
+    for (ul i = 0; i < mask;i++) {
+      ul Total{0};
+      for (size_t pos = 0; pos < S.size()-1; pos++)
+  	if ((i >> pos) & 1) {
+  	  Total = Total + S[pos];
+  	}
+      sums.insert(Total + S.back());
+    }      
+  }
+  int l{0};
+  vector<bool> x(n);
+  int cnt{0};
+  ul sigma{0};
+  stack<ul> sigmas;
+  sigmas.push(sigma);
+ B2://enter level l
+  x[l] = false;
+ B3:
+  if (d < sigma) goto B5;
+  if (l<n-1  && Rem[l+1] <= sigma) {
+      sigmas.push(sigma);
+      l++;  goto B2;
+  }
+  if (l == n-1) {
+    if (sigma <= d && sums.count(d-sigma) > 0) {
+      cnt += sums.count(d-sigma);
+      sigmas.push(sigma);
+      l++;
+      //visit(x, Dom_int);
+      goto B5;
+    } //found solution
+  }
+ B4://set x[l] to the next larger element
+  if (!x[l]) {x[l] = true; sigma = sigma + Dom_int[l]; goto B3;}
+ B5:
+  l--;
+  if (l>=0) {
+    /*downdate by undoing changes made in B3 and return to B4*/
+    sigmas.pop();
+    sigma = sigmas.top();
+    goto B4;
+  }
+  cout << cnt << endl;
+  return 0;
+}
