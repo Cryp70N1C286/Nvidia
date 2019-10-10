@@ -1,0 +1,113 @@
+#include <iostream>
+#include <iterator>
+#include <vector>
+#include <stack>
+#include <algorithm>
+using namespace std;
+#define FOR(i,a,b)  for(int i=(a);i<(b);++i) 
+#define REP(i,a)    FOR(i,0,a) 
+#define SP << " " <<
+#define ALL(x)      x.begin(),x.end() 
+#define PB          push_back 
+#define SI           size() 
+#define MP          make_pair 
+#define X           first 
+#define Y           second 
+#define VC          vector 
+#define VI          VC<int>
+
+stack<long> stck;
+
+struct soln {
+  long P;
+  long a;
+  VC<long> b;
+    bool operator<(const soln& s) const {
+    return  P < s.P ||
+		(P == s.P && a < s.a) ||
+      (P == s.P && a == s.a && b.SI < s.b.SI) ||
+      (P == s.P && a == s.a && b.SI == s.b.SI && b < s.b);
+  }
+};
+
+ostream& operator<<(ostream& os, const soln& s) {
+  os << s.a << "*(" ;
+  for (auto e: s.b) cout << e << (e==s.b.back()?')':',');
+  os << '=' << s.P << endl;
+  return os;
+}
+
+int translate(long n) {
+    if (n < 0)
+        return -1;
+    int S = 0;
+    for (; n; n /= 10) {
+        int d = n % 10;
+        if (S >> d & 1)
+            return -1;
+        S |= 1 << d;
+    }
+    return S;
+}
+
+int cnt = 0;
+long mx = 0;
+VC<soln> Solns;
+
+void dfs2(int dep, int S, int d, long x, int T, long concat) {
+    if (S == 0 && x == 0) {
+        if (dep >= 2 && T == (1 << 10) - 1) {
+	  soln Sol;
+	  Sol.P = concat;
+	  Sol.a = d;
+	  while (!stck.empty()) {
+	    Sol.b.insert(Sol.b.begin(),stck.top());
+	    stck.pop();
+	  }
+	  for (auto e: Sol.b) stck.push(e);
+	  Solns.PB(Sol);
+            cnt += 1;
+	    //if (cnt % 100 == 0)
+	    //cout << "d = " << d << ", dep = " << dep << ", concat = " << concat << endl;
+	    
+        }
+        return;
+    }
+    if (x != 0) {
+        long prod = d * x, p = translate(prod);
+        if (p > 0 && (p & T) == 0) {
+            long power = 1;
+            while (power <= prod)
+                power *= 10;
+	    stck.push(x);
+            dfs2(dep + 1, S, d, 0, T | p, concat * power + prod);
+	    stck.pop();
+        }
+    }
+
+    for (int i = x == 0; i <= 9; ++i)
+        if (S >> i & 1) {
+            dfs2(dep, S ^ (1 << i), d, x * 10 + i, T, concat);
+        }
+}
+
+void dfs1(int S, int d) {
+    if (d > 48)
+        return;
+    //cout << "d = " << d << endl;//print("d = {}\n", d);
+    if (d != 0)
+        dfs2(0, S, d, 0, 0, 0);
+    for (int i = d == 0; i <= 9; ++i)
+
+        if (S >> i & 1) {
+            dfs1(S ^ (1 << i), d * 10 + i);
+        }
+}
+
+int main() {
+    dfs1((1 << 10) - 1, 0);
+    cout << cnt << endl;
+    cout << Solns.SI << endl;
+    for (auto s: Solns) cout << s;
+    return 0;
+}
